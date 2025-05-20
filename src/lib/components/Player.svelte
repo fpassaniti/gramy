@@ -1,7 +1,7 @@
 <script>
-  import { useThrelte, useFrame } from '@threlte/core';
-  import { RigidBody } from '@threlte/rapier';
-  import { onMount } from 'svelte';
+import { useThrelte } from '@threlte/core';
+import { RigidBody } from '@threlte/rapier';
+import { onMount, onDestroy } from 'svelte';
   import * as THREE from 'three';
   import { writable } from 'svelte/store';
   import { playerState } from '../stores/gameStore';
@@ -37,8 +37,11 @@
     }
   });
 
-  // Mettre à jour le joueur à chaque frame
-  useFrame((state, delta) => {
+  // Boucle de mise à jour du joueur
+  const clock = new THREE.Clock();
+  let frameId;
+
+  function updatePlayer(delta) {
     if (!rigidBodyInstance) return;
 
     // Récupération de la position actuelle
@@ -68,6 +71,20 @@
         rigidBody: rigidBodyInstance
       });
     }
+  }
+
+  function loop() {
+    const delta = clock.getDelta();
+    updatePlayer(delta);
+    frameId = requestAnimationFrame(loop);
+  }
+
+  onMount(() => {
+    frameId = requestAnimationFrame(loop);
+  });
+
+  onDestroy(() => {
+    if (frameId) cancelAnimationFrame(frameId);
   });
 
   // Fonction pour appliquer le saut
