@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { useFrame } from '@threlte/core';
+  import * as THREE from 'three';
   import { writable } from 'svelte/store';
   import { playerState } from '../stores/gameStore';
 
@@ -73,6 +73,8 @@
     // Ajouter les écouteurs d'événements
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    // Démarrer la boucle de mouvement
+    frameId = requestAnimationFrame(loop);
   });
 
   onDestroy(() => {
@@ -80,6 +82,7 @@
     unsubscribePlayerState();
     window.removeEventListener('keydown', handleKeyDown);
     window.removeEventListener('keyup', handleKeyUp);
+    if (frameId) cancelAnimationFrame(frameId);
   });
 
   // Gestionnaire de mouvement
@@ -107,10 +110,17 @@
     }
   }
 
-  // Appliquer le mouvement à chaque frame
-  useFrame(() => {
+  // Boucle de rendu pour appliquer le mouvement
+  const clock = new THREE.Clock();
+  let frameId;
+
+  function loop() {
+    clock.getDelta(); // avance le temps
     handleMovement();
-  });
+    frameId = requestAnimationFrame(loop);
+  }
+
+  // le démarrage et l'arrêt de la boucle sont gérés plus haut
 </script>
 
 <!-- Ce composant ne rend rien visuellement, il gère uniquement les contrôles -->
